@@ -2,7 +2,7 @@ package com.xquestions.fullrestcomplete.controllers;
 
 import com.xquestions.fullrestcomplete.exceptions.BadRequestException;
 import com.xquestions.fullrestcomplete.exceptions.UserNotFoundException;
-import com.xquestions.fullrestcomplete.models.LoginRequest;
+import com.xquestions.fullrestcomplete.models.LoginDto;
 import com.xquestions.fullrestcomplete.models.User;
 import com.xquestions.fullrestcomplete.security.AuthenticationManager;
 import com.xquestions.fullrestcomplete.security.TokenProvider;
@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -30,7 +29,6 @@ import java.util.stream.Collectors;
 @RequestMapping("/auth")
 public class AuthController {
 
-    @Resource(name = "userService")
     @Autowired
     private UserService userService;
 
@@ -46,7 +44,7 @@ public class AuthController {
     private static Logger log = LoggerFactory.getLogger(AuthController.class);
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@Valid @RequestBody LoginRequest login, HttpServletRequest request) {
+    public ResponseEntity<String> login(@Valid @RequestBody LoginDto login, HttpServletRequest request) {
         User user = userService.findByUsername(login.getUsername())
                 .orElseThrow(new UserNotFoundException("User with this username was not found"));
 
@@ -100,14 +98,7 @@ public class AuthController {
     // Just example of using session, we don't need this Logout at all
     @PostMapping("/logout")
     public void logout(@RequestParam int userid, HttpServletRequest request) {
-        List<User> users = (List<User>) request.getSession().getAttribute("LOGGED_USERS");
-        //check if users are present in session or not
-        if (users != null) {
-            users = users.stream()
-                    .filter(user -> user.getId() != userid)
-                    .collect(Collectors.toList());
-            request.getSession().setAttribute("LOGGED_USERS", users);
-        }
+        request.getSession().invalidate();
     }
 
 }

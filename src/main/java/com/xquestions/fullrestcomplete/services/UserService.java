@@ -23,8 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
-@Service(value = "userService")
-public class UserService implements UserDetailsService {
+public class UserService {
 
     @Autowired
     JdbcTemplate jdbcTemplate;
@@ -52,13 +51,16 @@ public class UserService implements UserDetailsService {
     }
 
     public void save(User user) {
-        String sql = "insert into users(username, password, enabled, roles) values" +
-                "(:username, :password, :enabled, :roles);";
+        String sql = "insert into users(username, password, email, firstname, lastname, activated, roles) values" +
+                "(:username, :password, :email, :firstname, :lastname, :activated, :roles);";
 
         SqlParameterSource namedParameters = new MapSqlParameterSource()
                 .addValue("username", user.getUsername())
                 .addValue("password", user.getPassword())
-                .addValue("enabled", user.getEnabled())
+                .addValue("email", user.getEmail())
+                .addValue("firstname", user.getFirstname())
+                .addValue("lastname", user.getLastname())
+                .addValue("activated", user.isActivated())
                 .addValue("roles", user.getRoles().stream()
                         .map(Enum::name)
                         .collect(Collectors.joining(","))
@@ -66,24 +68,6 @@ public class UserService implements UserDetailsService {
 
         namedParameterJdbcTemplate.update(sql, namedParameters);
 
-    }
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<User> optionalUser = findByUsername(username);
-        if(!optionalUser.isPresent()){
-            throw new UsernameNotFoundException("Invalid username or password.");
-        }
-        User user = optionalUser.get();
-        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), getAuthority(user));
-    }
-
-    private Set<SimpleGrantedAuthority> getAuthority(User user) {
-        Set<SimpleGrantedAuthority> authorities = new HashSet<>();
-        user.getRoles().forEach(role -> {
-            authorities.add(new SimpleGrantedAuthority(role.name()));
-        });
-        return authorities;
     }
 
     public static class UserRowMapper implements RowMapper<User> {
@@ -94,7 +78,10 @@ public class UserService implements UserDetailsService {
             user.setId(rs.getInt("id"));
             user.setUsername(rs.getString("username"));
             user.setPassword(rs.getString("password"));
-            user.setEnabled(rs.getBoolean("enabled"));
+            user.setEmail(rs.getString("email"));
+            user.setFirstname(rs.getString("firstname"));
+            user.setLastname(rs.getString("lastname"));
+            user.setActivated(rs.getBoolean("activated"));
             user.setRoles(Arrays.stream(rs.getString("roles").split(","))
                     .map(Role::valueOf).collect(Collectors.toList()));
 

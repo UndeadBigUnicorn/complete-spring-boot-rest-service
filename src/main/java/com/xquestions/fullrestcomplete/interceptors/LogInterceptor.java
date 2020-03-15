@@ -19,6 +19,8 @@ public class LogInterceptor extends HandlerInterceptorAdapter {
         // so now it's possible to do something with user
         try {
             String username = request.getUserPrincipal().getName();
+            // for example
+//            request.setAttribute("subscription", "");
             logger.info(x + " intercepted for the user - " + username);
         } catch (NullPointerException e) {
             logger.info(x + " intercepted for the anonymous user");

@@ -18,7 +18,6 @@ import java.util.List;
 @PreAuthorize("hasRole('ROLE_ADMIN')")
 public class UsersController {
 
-    @Resource(name = "userService")
     @Autowired
     private UserService userService;
 
