@@ -1,5 +1,6 @@
 package com.xquestions.fullrestcomplete.security;
 
+import com.xquestions.fullrestcomplete.exceptions.UserNotActivatedException;
 import com.xquestions.fullrestcomplete.models.User;
 import com.xquestions.fullrestcomplete.services.UserService;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -35,10 +36,11 @@ public class UserModelDetailsService implements UserDetailsService {
     }
 
     private Set<SimpleGrantedAuthority> getAuthority(User user) {
+        if (!user.isActivated()) {
+            throw new UserNotActivatedException("User " + user.getUsername() + " was not activated");
+        }
         Set<SimpleGrantedAuthority> authorities = new HashSet<>();
-        user.getRoles().forEach(role -> {
-            authorities.add(new SimpleGrantedAuthority(role.name()));
-        });
+        user.getRoles().forEach(role -> authorities.add(new SimpleGrantedAuthority(role.name())));
         return authorities;
     }
 }
